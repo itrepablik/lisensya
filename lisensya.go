@@ -18,9 +18,6 @@ package lisensya
 
 import (
 	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -28,47 +25,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/itrepablik/tago"
 )
-
-var iv = []byte{35, 46, 57, 24, 85, 35, 24, 74, 87, 35, 88, 98, 66, 32, 14, 05}
-
-func encodeBase64(b []byte) string {
-	return base64.StdEncoding.EncodeToString(b)
-}
-
-func decodeBase64(s string) []byte {
-	data, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
-// Encrypt is the encryptor of any classified text.
-func Encrypt(text, secretKey string) (string, error) {
-	block, err := aes.NewCipher([]byte(secretKey))
-	if err != nil {
-		return "", err
-	}
-	plaintext := []byte(text)
-	cfb := cipher.NewCFBEncrypter(block, iv)
-	ciphertext := make([]byte, len(plaintext))
-	cfb.XORKeyStream(ciphertext, plaintext)
-	return encodeBase64(ciphertext), nil
-}
-
-// Decrypt is the decryptor of the some classified text.
-func Decrypt(text, secretKey string) (string, error) {
-	block, err := aes.NewCipher([]byte(secretKey))
-	if err != nil {
-		return "", err
-	}
-	ciphertext := decodeBase64(text)
-	cfb := cipher.NewCFBDecrypter(block, iv)
-	plaintext := make([]byte, len(ciphertext))
-	cfb.XORKeyStream(plaintext, ciphertext)
-	return string(plaintext), nil
-}
 
 // RevokeLicenseKey revokes existing gokopy license key.
 func RevokeLicenseKey(licenseKey, modifiedBy, APIEndPoint, secretKey string) (bool, error) {
@@ -118,7 +77,7 @@ func GenerateLicenseKey(licenseKey, appName, secretKey string) (string, error) {
 	defer f.Close()
 
 	// Write a new license key to your 'appname.license' custom file.
-	newLicenseKey, err := Encrypt(licenseKey, secretKey)
+	newLicenseKey, err := tago.Encrypt(licenseKey, secretKey)
 	if err != nil {
 		return "", err
 	}
