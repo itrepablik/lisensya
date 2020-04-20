@@ -29,6 +29,30 @@ import (
 	"github.com/itrepablik/tago"
 )
 
+// GenerateLicenseKey writes the new license key to a custom file and stores in the root directory of your
+// app directory, e.g appname.license
+func GenerateLicenseKey(licenseKey, appName, secretKey string) (string, error) {
+	// Create a license file if not exist with the '.license' custom file format.
+	keyFile := strings.ToLower(appName) + ".license"
+	f, err := os.OpenFile(keyFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	// Write a new license key to your 'appname.license' custom file.
+	newLicenseKey, err := tago.Encrypt(licenseKey, secretKey)
+	if err != nil {
+		return "", err
+	}
+
+	err = ioutil.WriteFile(f.Name(), []byte(strings.TrimSpace(newLicenseKey)), 0644)
+	if err != nil {
+		return "", err
+	}
+	return newLicenseKey, nil
+}
+
 // RevokeLicenseKey revokes existing gokopy license key.
 func RevokeLicenseKey(licenseKey, modifiedBy, APIEndPoint, secretKey string) (bool, error) {
 	// Get the hostname for the source machine.
@@ -63,30 +87,6 @@ func RevokeLicenseKey(licenseKey, modifiedBy, APIEndPoint, secretKey string) (bo
 	mStatus := fmt.Sprint(i)
 	isSuccess, _ := strconv.ParseBool(mStatus)
 	return isSuccess, nil
-}
-
-// GenerateLicenseKey writes the new license key to a custom file and stores in the root directory of your
-// app directory, e.g appname.license
-func GenerateLicenseKey(licenseKey, appName, secretKey string) (string, error) {
-	// Create a license file if not exist with the '.license' custom file format.
-	keyFile := strings.ToLower(appName) + ".license"
-	f, err := os.OpenFile(keyFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	// Write a new license key to your 'appname.license' custom file.
-	newLicenseKey, err := tago.Encrypt(licenseKey, secretKey)
-	if err != nil {
-		return "", err
-	}
-
-	err = ioutil.WriteFile(f.Name(), []byte(strings.TrimSpace(newLicenseKey)), 0644)
-	if err != nil {
-		return "", err
-	}
-	return newLicenseKey, nil
 }
 
 // ReadLicenseKey reads the license key if found from a custom file, otherwise, throws an error.
