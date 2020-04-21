@@ -42,7 +42,7 @@ func GenerateLicenseKey(licenseKey, appName, secretKey string, expiredInDays int
 	}
 
 	// Write a new license key to your 'appname.license' custom file.
-	newLicenseKey, err = tago.Encrypt(licenseKey, secretKey)
+	newLicenseKey, err = tago.Encrypt(newLicenseKey, secretKey)
 	if err != nil {
 		return "", err
 	}
