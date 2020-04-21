@@ -29,11 +29,15 @@ import (
 	"github.com/itrepablik/tago"
 )
 
+const (
+	_fileExt = ".license"
+)
+
 // GenerateLicenseKey writes the new license key to a custom file and stores in the root directory of your
 // app directory, e.g appname.license
 func GenerateLicenseKey(licenseKey, appName, secretKey string) (string, error) {
 	// Create a license file if not exist with the '.license' custom file format.
-	keyFile := strings.ToLower(appName) + ".license"
+	keyFile := strings.ToLower(appName) + _fileExt
 	f, err := os.OpenFile(keyFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return "", err
@@ -92,7 +96,15 @@ func RevokeLicenseKey(licenseKey, modifiedBy, APIEndPoint, secretKey string) (bo
 // ReadLicenseKey reads the license key if found from a custom file, otherwise, throws an error.
 func ReadLicenseKey(appName string) (string, error) {
 	// Open the custom license file
-	file, err := os.Open(strings.ToLower(appName) + ".license")
+	// Create a license file if not exist with the '.license' custom file format.
+	licFile := strings.ToLower(appName) + _fileExt
+	f, err := os.OpenFile(licFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	file, err := os.Open(strings.ToLower(appName) + _fileExt)
 	if err != nil {
 		return "", err
 	}
