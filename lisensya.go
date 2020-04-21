@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	_fileExt          = ".license"
-	expiredDateFormat = "Jan-02-2006"
+	_fileExt           = ".license"
+	_expiredDateFormat = "Jan-02-2006"
+	_expiryDelimiter   = ";expiry:"
 )
 
 // GenerateLicenseKey writes the new license key to a custom file and stores in the root directory of your
@@ -32,13 +33,15 @@ func GenerateLicenseKey(licenseKey, appName, secretKey string, expiredInDays int
 	defer f.Close()
 
 	// Add license expiry date using the '+days' from the current system datetime.
-	expiredDays := time.Now().AddDate(0, 0, expiredInDays).Format(expiredDateFormat)
+	expiredDays := time.Now().AddDate(0, 0, expiredInDays).Unix()
+	strExpiredDate := fmt.Sprintf("%v", expiredDays)
 	newLicenseKey := ""
 
+	// Set extra expiry date info to be embeded for each license key.
 	if expiredInDays > 0 {
-		newLicenseKey = licenseKey + ";expiry:" + expiredDays
+		newLicenseKey = licenseKey + _expiryDelimiter + strExpiredDate
 	} else {
-		newLicenseKey = licenseKey + ";expiry:none"
+		newLicenseKey = licenseKey + _expiryDelimiter + "none"
 	}
 
 	// Write a new license key to your 'appname.license' custom file.
