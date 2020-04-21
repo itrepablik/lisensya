@@ -10,17 +10,19 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/itrepablik/tago"
 )
 
 const (
-	_fileExt = ".license"
+	_fileExt          = ".license"
+	expiredDateFormat = "Jan-02-2006"
 )
 
 // GenerateLicenseKey writes the new license key to a custom file and stores in the root directory of your
 // app directory, e.g appname.license
-func GenerateLicenseKey(licenseKey, appName, secretKey string) (string, error) {
+func GenerateLicenseKey(licenseKey, appName, secretKey string, expiredInDays int) (string, error) {
 	// Create a license file if not exist with the '.license' custom file format.
 	keyFile := strings.ToLower(appName) + _fileExt
 	f, err := os.OpenFile(keyFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -29,8 +31,18 @@ func GenerateLicenseKey(licenseKey, appName, secretKey string) (string, error) {
 	}
 	defer f.Close()
 
+	// Add license expiry date using the '+days' from the current system datetime.
+	expiredDays := time.Now().AddDate(0, 0, expiredInDays).Format(expiredDateFormat)
+	newLicenseKey := ""
+
+	if expiredInDays > 0 {
+		newLicenseKey = licenseKey + ";expiry:" + expiredDays
+	} else {
+		newLicenseKey = licenseKey + ";expiry:none"
+	}
+
 	// Write a new license key to your 'appname.license' custom file.
-	newLicenseKey, err := tago.Encrypt(licenseKey, secretKey)
+	newLicenseKey, err = tago.Encrypt(licenseKey, secretKey)
 	if err != nil {
 		return "", err
 	}
