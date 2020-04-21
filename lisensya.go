@@ -16,9 +16,8 @@ import (
 )
 
 const (
-	_fileExt           = ".license"
-	_expiredDateFormat = "Jan-02-2006"
-	_expiryDelimiter   = ";expiry:"
+	_fileExt         = ".license"
+	_expiryDelimiter = ";expiry:"
 )
 
 // GenerateLicenseKey writes the new license key to a custom file and stores in the root directory of your
