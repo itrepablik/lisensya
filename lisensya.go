@@ -16,13 +16,13 @@ import (
 )
 
 const (
-	_fileExt         = ".license"
-	_expiryDelimiter = ";expiry:"
+	_fileExt                = ".license"
+	_defaultExpiryDelimiter = ";expiry:"
 )
 
 // GenerateLicenseKey writes the new license key to a custom file and stores in the root directory of your
 // app directory, e.g appname.license
-func GenerateLicenseKey(licenseKey, appName, secretKey string, expiredInDays int) (string, error) {
+func GenerateLicenseKey(licenseKey, appName, secretKey, expiryDelimeter string, expiredInDays int) (string, error) {
 	// Create a license file if not exist with the '.license' custom file format.
 	keyFile := strings.ToLower(appName) + _fileExt
 	f, err := os.OpenFile(keyFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -36,11 +36,16 @@ func GenerateLicenseKey(licenseKey, appName, secretKey string, expiredInDays int
 	strExpiredDate := fmt.Sprintf("%v", expiredDays)
 	newLicenseKey := ""
 
+	// Set expiry delimeter
+	if len(strings.TrimSpace(expiryDelimeter)) == 0 {
+		expiryDelimeter = _defaultExpiryDelimiter
+	}
+
 	// Set extra expiry date info to be embeded for each license key.
 	if expiredInDays > 0 {
-		newLicenseKey = licenseKey + _expiryDelimiter + strExpiredDate
+		newLicenseKey = licenseKey + expiryDelimeter + strExpiredDate
 	} else {
-		newLicenseKey = licenseKey + _expiryDelimiter + "none"
+		newLicenseKey = licenseKey + expiryDelimeter + "none"
 	}
 
 	// Write a new license key to your 'appname.license' custom file.
@@ -124,4 +129,22 @@ func GetHostName() (string, error) {
 		return "", err
 	}
 	return PCName, nil
+}
+
+// IsLicenseKeyExpired ensure that the license key expiration date is still valid or not.
+func IsLicenseKeyExpired(licenseKey, expiryDelimeter string) bool {
+	var curTime int64 = time.Now().Unix()
+	data := strings.Split(strings.TrimSpace(fmt.Sprint(licenseKey)), expiryDelimeter)
+	for n, d := range data {
+		if n == 1 {
+			if d != "none" {
+				if intUnixDate, err := strconv.Atoi(d); err == nil {
+					if curTime >= int64(intUnixDate) {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
 }
