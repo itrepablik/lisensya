@@ -4,6 +4,7 @@ package lisensya
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/itrepablik/itrdsn"
 	"github.com/itrepablik/tago"
 )
 
@@ -62,19 +64,13 @@ func GenerateLicenseKey(licenseKey, appName, secretKey, expiryDelimeter string, 
 }
 
 // RevokeLicenseKey revokes existing gokopy license key.
-func RevokeLicenseKey(licenseKey, modifiedBy, APIEndPoint, secretKey string) (bool, error) {
-	// Get the hostname for the source machine.
-	hostName, err := GetHostName()
-	if err != nil {
-		return false, err
-	}
-
+func RevokeLicenseKey(APIEndPoint, appName string, payLoad ...interface{}) (bool, error) {
 	// Compose the JSON post payload to the API endpoint.
-	message := map[string]interface{}{
-		"hostName":   hostName,
-		"licenseKey": licenseKey,
-		"modifiedBy": modifiedBy,
-		"secretKey":  secretKey,
+	var extractPayLoad []interface{} = payLoad
+	message := map[string]interface{}{}
+
+	for c, v := range extractPayLoad {
+		message[fmt.Sprintf("%v", c)] = v
 	}
 
 	bytesRepresentation, err := json.Marshal(message)
@@ -84,6 +80,11 @@ func RevokeLicenseKey(licenseKey, modifiedBy, APIEndPoint, secretKey string) (bo
 
 	resp, err := http.Post(APIEndPoint, "application/json", bytes.NewBuffer(bytesRepresentation))
 	if err != nil {
+		return false, err
+	}
+
+	// Clear the license key file as well
+	if err := ClearLicenseKeyFile(appName); err != nil {
 		return false, err
 	}
 
@@ -132,9 +133,9 @@ func GetHostName() (string, error) {
 }
 
 // IsLicenseKeyExpired ensure that the license key expiration date is still valid or not.
-func IsLicenseKeyExpired(licenseKey, expiryDelimeter string) bool {
+func IsLicenseKeyExpired(licenseKey, expiryDelimiter string) bool {
 	var curTime int64 = time.Now().Unix()
-	data := strings.Split(strings.TrimSpace(fmt.Sprint(licenseKey)), expiryDelimeter)
+	data := strings.Split(strings.TrimSpace(fmt.Sprint(licenseKey)), expiryDelimiter)
 	for n, d := range data {
 		if n == 1 {
 			if d != "none" {
@@ -147,4 +148,69 @@ func IsLicenseKeyExpired(licenseKey, expiryDelimeter string) bool {
 		}
 	}
 	return false
+}
+
+// ExtractLicenseKey extract the license key without the expiry date.
+func ExtractLicenseKey(licenseKey, expiryDelimiter string) string {
+	data := strings.Split(strings.TrimSpace(fmt.Sprint(licenseKey)), expiryDelimiter)
+	extractedLicenseKey := ""
+	for n, d := range data {
+		if n == 0 {
+			extractedLicenseKey = d
+		}
+	}
+	return extractedLicenseKey
+}
+
+// IsLicenseKeyValid is the main license key's validation.
+func IsLicenseKeyValid(appName, secretKey, expiryDelimiter string) (bool, error) {
+	// Get the user's primary hard disk serial number
+	diskSerialNo, err := itrdsn.GetDiskSerialNo()
+	if err != nil {
+		return false, err
+	}
+
+	// Get the license key from a file
+	fileDiskSerialNo := ""
+	licenseKey, err := ReadLicenseKey(appName)
+	if err != nil {
+		return false, err
+	}
+
+	fileDiskSerialNo, err = tago.Decrypt(licenseKey, secretKey)
+	if err != nil {
+		return false, errors.New("error decrypting license key: " + err.Error())
+	}
+
+	// Check if the license key is expired or not
+	if IsLicenseKeyExpired(fileDiskSerialNo, expiryDelimiter) {
+		return false, errors.New("license key has been expired")
+	}
+
+	// Extract the license key without expiry date information
+	extractedLicenseKey := ExtractLicenseKey(fileDiskSerialNo, expiryDelimiter)
+
+	// Check both disk serial number must match
+	if strings.TrimSpace(extractedLicenseKey) != strings.TrimSpace(diskSerialNo) {
+		return false, errors.New("either license key file is empty or invalid")
+	}
+	return true, nil
+}
+
+// ClearLicenseKeyFile remove license key from a file.
+func ClearLicenseKeyFile(appName string) error {
+	// Create a license file if not exist with the '.license' custom file format.
+	keyFile := strings.ToLower(appName) + _fileExt
+	f, err := os.OpenFile(keyFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// Now, empty the license key from a file
+	err = ioutil.WriteFile(f.Name(), []byte(strings.TrimSpace("")), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
