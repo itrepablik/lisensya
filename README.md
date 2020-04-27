@@ -94,5 +94,52 @@ func main() {
 }
 ```
 
+This is to revoke existing license key:
+```
+package main
+
+import (
+	"fmt"
+
+	"github.com/itrepablik/itrlog"
+	"github.com/itrepablik/lisensya"
+)
+
+// Keep this secret
+const (
+	secretKey              = "abc&1*~#^2^#s0^=)^^7%b34"
+	appName                = "NiceApp"
+	licenseExpiryDelimiter = "--expiry:"
+	APInewlicense          = "" // e.g. https://your_site_name.com/api/your_api_url
+	expiredInDays          = 30
+)
+
+// IsLicenseKeyValid is declared globally at your main.go check either the license key is expired or not.
+var IsLicenseKeyValid bool = false
+var hostName string = ""
+
+func main() {
+	userName := "username"
+
+	// Get the existing license key from a file.
+	licenseKey, err := lisensya.ReadLicenseKey(appName)
+	if err != nil {
+		itrlog.Fatal("error getting current license key: ", err)
+	}
+
+	// Update the license key at the backend
+	rLicKey, err := lisensya.RevokeLicenseKey(APInewlicense, appName, hostName, licenseKey, userName, secretKey)
+	if err != nil {
+		itrlog.Fatal("error revoking your existing license key: ", err)
+	}
+
+	if rLicKey {
+		fmt.Println("Successfully revoked your current gokopy's license key.")
+	} else {
+		fmt.Println("Oops!, so far probably you don't have any existing license key to be revoked.")
+	}
+}
+```
+
 # License
 Code is distributed under MIT license, feel free to use it in your proprietary projects as well.
