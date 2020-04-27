@@ -141,5 +141,27 @@ func main() {
 }
 ```
 
+# Sample scripts on how you can handle the values at your backend API.
+```
+// APIGenerateLicenseKey generate's the license key at your backend system.
+func APIGenerateLicenseKey(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	body, errBody := ioutil.ReadAll(r.Body)
+	if errBody != nil {
+		panic(errBody.Error())
+	}
+
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+
+	hostName := strings.TrimSpace(keyVal["0"])
+	userName := strings.TrimSpace(keyVal["1"])
+	secretKey := Decrypt(keyVal["2"])
+	licenseKey := keyVal["3"]
+}
+```
+
 # License
 Code is distributed under MIT license, feel free to use it in your proprietary projects as well.
