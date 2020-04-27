@@ -7,8 +7,6 @@ github.com/go-ole/go-ole v1.2.4/go.mod h1:XCwSNxSkXRo4vlyPy93sltvi/qJq0jqQhjqQNI
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/itrepablik/itrdsn v1.0.1 h1:fhfO9KA0bfrADsu+fk56TKY8J6jKAUJp6D/xvsjMeuo=
 github.com/itrepablik/itrdsn v1.0.1/go.mod h1:tu+GNHCK6z5xAcl4HdYhU4oTZnee5jbjXjbkgRVkbdY=
-github.com/itrepablik/tago v1.0.0 h1:oga9YiV3xhpdU/gDpgN7nfQXKJRhR4x4OP551bqAeP4=
-github.com/itrepablik/tago v1.0.0/go.mod h1:/rbMgkE7GpAHalGxVhH/82hSFHcG6KqETcQqubM7+T4=
 github.com/itrepablik/tago v1.0.1 h1:eQmzy5MRHiHAggA5SNjwrq20JlBFvJVj8EtMF/pbYOM=
 github.com/itrepablik/tago v1.0.1/go.mod h1:/rbMgkE7GpAHalGxVhH/82hSFHcG6KqETcQqubM7+T4=
 github.com/jaypipes/ghw v0.6.0 h1:YGPxlDG9nmiZLWosU1fq+PaBMxNKE07PFg8Y6e6VPto=

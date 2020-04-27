@@ -24,12 +24,12 @@ const (
 
 // GenerateLicenseKey writes the new license key to a custom file and stores in the root directory of your
 // app directory, e.g appname.license
-func GenerateLicenseKey(licenseKey, appName, secretKey, expiryDelimeter string, expiredInDays int) (string, error) {
+func GenerateLicenseKey(API, licenseKey, appName, secretKey, expiryDelimeter string, expiredInDays int, payLoad ...interface{}) (bool, error) {
 	// Create a license file if not exist with the '.license' custom file format.
 	keyFile := strings.ToLower(appName) + _fileExt
 	f, err := os.OpenFile(keyFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return "", err
+		return false, err
 	}
 	defer f.Close()
 
@@ -53,18 +53,71 @@ func GenerateLicenseKey(licenseKey, appName, secretKey, expiryDelimeter string, 
 	// Write a new license key to your 'appname.license' custom file.
 	newLicenseKey, err = tago.Encrypt(newLicenseKey, secretKey)
 	if err != nil {
-		return "", err
+		return false, err
 	}
 
 	err = ioutil.WriteFile(f.Name(), []byte(strings.TrimSpace(newLicenseKey)), 0644)
 	if err != nil {
-		return "", err
+		return false, err
 	}
-	return newLicenseKey, nil
+
+	// Check if the API endpoint has been activated or not
+	if len(strings.TrimSpace(API)) > 0 {
+		payLoad = append(payLoad, newLicenseKey) // Add additional value to our payLoad variadic interface parameter.
+		api, err := APISubmitNewLicenseKey(API, payLoad)
+		if err != nil {
+			return false, err
+		}
+		if api {
+			return true, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+// APISubmitNewLicenseKey to submit new license key information to any backend API endpoint.
+func APISubmitNewLicenseKey(API string, payLoad []interface{}) (bool, error) {
+	// Check if the API endpoint has been activated or not
+	if len(strings.TrimSpace(API)) > 0 {
+		api, err := APIEndPoint(API, payLoad)
+		if err != nil {
+			return false, err
+		}
+		if api {
+			return true, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 // RevokeLicenseKey revokes existing gokopy license key.
-func RevokeLicenseKey(APIEndPoint, appName string, payLoad ...interface{}) (bool, error) {
+func RevokeLicenseKey(API, appName string, payLoad ...interface{}) (bool, error) {
+	// Check if the API endpoint has been activated or not
+	if len(strings.TrimSpace(API)) > 0 {
+		api, err := APIEndPoint(API, payLoad)
+		if err != nil {
+			return false, err
+		}
+		if api {
+			// Clear the license key file as well
+			if err := ClearLicenseKeyFile(appName); err != nil {
+				return false, err
+			}
+			return true, nil
+		}
+	} else {
+		// Clear the license key file as well
+		if err := ClearLicenseKeyFile(appName); err != nil {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// APIEndPoint is the backend endpoint for your application when required to be triggered.
+func APIEndPoint(API string, payLoad []interface{}) (bool, error) {
 	// Compose the JSON post payload to the API endpoint.
 	var extractPayLoad []interface{} = payLoad
 	message := map[string]interface{}{}
@@ -78,13 +131,8 @@ func RevokeLicenseKey(APIEndPoint, appName string, payLoad ...interface{}) (bool
 		return false, err
 	}
 
-	resp, err := http.Post(APIEndPoint, "application/json", bytes.NewBuffer(bytesRepresentation))
+	resp, err := http.Post(API, "application/json", bytes.NewBuffer(bytesRepresentation))
 	if err != nil {
-		return false, err
-	}
-
-	// Clear the license key file as well
-	if err := ClearLicenseKeyFile(appName); err != nil {
 		return false, err
 	}
 
