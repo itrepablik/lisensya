@@ -141,7 +141,7 @@ func main() {
 }
 ```
 
-# Sample scripts on how you can handle the values at your backend API.
+Sample scripts on how you can handle the values at your backend API.
 ```
 // APIGenerateLicenseKey generate's the license key at your backend system.
 func APIGenerateLicenseKey(w http.ResponseWriter, r *http.Request) {
