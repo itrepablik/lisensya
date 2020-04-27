@@ -47,5 +47,52 @@ func main() {
 }
 ```
 
+This is to generate a new license key:
+```
+package main
+
+import (
+	"fmt"
+
+	"github.com/itrepablik/itrlog"
+	"github.com/itrepablik/lisensya"
+)
+
+// Keep this secret
+const (
+	secretKey              = "abc&1*~#^2^#s0^=)^^7%b34"
+	appName                = "NiceApp"
+	licenseExpiryDelimiter = "--expiry:"
+	APInewlicense          = "" // e.g. https://your_site_name.com/api/your_api_url
+	expiredInDays          = 30
+)
+
+// IsLicenseKeyValid is declared globally at your main.go check either the license key is expired or not.
+var IsLicenseKeyValid bool = false
+var hostName string = ""
+
+func main() {
+	// Get the hostname
+	hostName, err := lisensya.GetHostName()
+	if err != nil {
+		itrlog.Fatal("error getting hostname: ", err)
+	}
+
+	// Starts writing a new license key
+	userName := "username"
+	isNewLicenseOK, err := lisensya.GenerateLicenseKey(APInewlicense, appName,
+		secretKey, licenseExpiryDelimiter, expiredInDays, hostName, userName, secretKey)
+
+	if err != nil {
+		itrlog.Fatal("error generating new license key: ", err)
+	}
+
+	// Inform user about the new license key successfully generated.
+	if isNewLicenseOK {
+		fmt.Println("You've successfully generated your gokopy's license key, you can now use this software.")
+	}
+}
+```
+
 # License
 Code is distributed under MIT license, feel free to use it in your proprietary projects as well.
