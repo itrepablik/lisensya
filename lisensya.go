@@ -24,7 +24,13 @@ const (
 
 // GenerateLicenseKey writes the new license key to a custom file and stores in the root directory of your
 // app directory, e.g appname.license
-func GenerateLicenseKey(API, licenseKey, appName, secretKey, expiryDelimeter string, expiredInDays int, payLoad ...interface{}) (bool, error) {
+func GenerateLicenseKey(API, appName, secretKey, expiryDelimeter string, expiredInDays int, payLoad ...interface{}) (bool, error) {
+	// Get the disk serial number
+	diskSerialNo, err := itrdsn.GetDiskSerialNo()
+	if err != nil {
+		return false, errors.New("error getting disk serial number: " + err.Error())
+	}
+
 	// Create a license file if not exist with the '.license' custom file format.
 	keyFile := strings.ToLower(appName) + _fileExt
 	f, err := os.OpenFile(keyFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -45,9 +51,9 @@ func GenerateLicenseKey(API, licenseKey, appName, secretKey, expiryDelimeter str
 
 	// Set extra expiry date info to be embeded for each license key.
 	if expiredInDays > 0 {
-		newLicenseKey = licenseKey + expiryDelimeter + strExpiredDate
+		newLicenseKey = diskSerialNo + expiryDelimeter + strExpiredDate
 	} else {
-		newLicenseKey = licenseKey + expiryDelimeter + "none"
+		newLicenseKey = diskSerialNo + expiryDelimeter + "none"
 	}
 
 	// Write a new license key to your 'appname.license' custom file.
@@ -188,7 +194,7 @@ func IsLicenseKeyExpired(licenseKey, expiryDelimiter string) bool {
 		if n == 1 {
 			if d != "none" {
 				if intUnixDate, err := strconv.Atoi(d); err == nil {
-					if curTime >= int64(intUnixDate) {
+					if int64(intUnixDate) <= curTime {
 						return true
 					}
 				}
