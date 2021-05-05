@@ -164,8 +164,8 @@ func APIGenerateLicenseKey(w http.ResponseWriter, r *http.Request) {
 ```
 
 # Subscribe to Maharlikans Code Youtube Channel:
-Please consider subscribing to my Youtube Channel to recognize my work on this package. Thank you for your support!
-https://www.youtube.com/channel/UCdAVUmldU9Jn2VntuQChHqQ/
+Please consider subscribing to my Youtube Channel to recognize my work on any of my tutorial series. Thank you so much for your support!
+https://www.youtube.com/c/MaharlikansCode?sub_confirmation=1
 
 # License
 Code is distributed under MIT license, feel free to use it in your proprietary projects as well.
