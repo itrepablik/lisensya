@@ -2,13 +2,13 @@
 The **lisensya** package is a simple license key generator that manages your license key requirements for your Go's application.
 
 # Installation
-```
+```go
 go get -u github.com/itrepablik/lisensya
 ```
 
 # Usage
 For this example, this is how you can use the main function to check your license key which is most likely in your main.go file.
-```
+```go
 package main
 
 import (
@@ -48,7 +48,7 @@ func main() {
 ```
 
 This is to generate a new license key:
-```
+```go
 package main
 
 import (
@@ -95,7 +95,7 @@ func main() {
 ```
 
 This is to revoke existing license key:
-```
+```go
 package main
 
 import (
@@ -142,7 +142,7 @@ func main() {
 ```
 
 Sample scripts on how you can handle the values at your backend API.
-```
+```go
 // APIGenerateLicenseKey generate's the license key at your backend system.
 func APIGenerateLicenseKey(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
